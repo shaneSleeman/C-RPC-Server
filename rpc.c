@@ -3,6 +3,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
+
+// Socket functions
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #define MAX_FUNCTIONS 1000 // Placeholder before dynamic
 
@@ -14,6 +20,7 @@ struct rpc_server {
     int functions_count;
     char **functions;
     rpc_handler *handlers;
+    int socket;
 };
 
 rpc_server *rpc_init_server(int port) {
@@ -22,6 +29,18 @@ rpc_server *rpc_init_server(int port) {
     server->functions_count = 0;
     server->functions = NULL;
     server->handlers = NULL;
+
+    // Set up socket
+    server->socket = socket(AF_INET6, SOCK_STREAM, 0);
+
+    // Reuse option
+    int reuse = 1;
+    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+        close(server->socket);
+        free(server);
+        return NULL;
+    }
+
     return server;
 }
 
