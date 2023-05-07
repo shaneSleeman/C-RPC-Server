@@ -2,13 +2,32 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-/*  Note that due to being limited on time, I only aim to
-    obtain 3 marks in the CI to pass the assignments+tute
-    attendance hurdle.
-*/
+#include <getopt.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
+
+    // Correctly parse command line args
+    char *ip;
+    char *port;
+    int command;
+    
+    // getopt appears to be needed for &
+    while ((command = getopt(argc, argv, "i:p:")) != -1) {
+        switch (command) {
+            case 'i':
+                ip = optarg;
+                break;
+            case 'p':
+                port = optarg;
+                break;
+            default:
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    if (ip == NULL || port == NULL) exit(EXIT_FAILURE);
+
     int exit_code = 0;
 
     rpc_client *state = rpc_init_client("::1", 3000);

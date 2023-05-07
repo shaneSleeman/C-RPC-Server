@@ -2,10 +2,30 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
+#include <string.h>
 
 rpc_data *add2_i8(rpc_data *);
 
 int main(int argc, char *argv[]) {
+
+    // Correctly parse command line args
+    char *port;
+    int command;
+
+    // getopt appears to be needed for &
+    while ((command = getopt(argc, argv, "p:")) != -1) {
+        switch (command) {
+            case 'p':
+                port = optarg;
+                break;
+            default:
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    if (port == NULL) exit(EXIT_FAILURE);
+
     rpc_server *state;
 
     state = rpc_init_server(3000);
