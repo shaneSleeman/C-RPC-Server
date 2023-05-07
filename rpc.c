@@ -66,7 +66,17 @@ rpc_server *rpc_init_server(int port) {
 }
 
 int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
-    return -1;
+
+    // Dynamically resize arrays for new added function
+    srv->functions = (char **)realloc(srv->functions, (srv->functions_count + 1) * sizeof(char *));
+    srv->handlers = (rpc_handler *)realloc(srv->handlers, (srv->functions_count + 1) * sizeof(rpc_handler));
+
+    // Add function/handler to server
+    srv->functions[srv->functions_count] = strdup(name);
+    srv->handlers[srv->functions_count] = handler;
+    srv->functions_count++;
+
+    return 0;
 }
 
 void rpc_serve_all(rpc_server *srv) {
