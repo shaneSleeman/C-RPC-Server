@@ -41,6 +41,27 @@ rpc_server *rpc_init_server(int port) {
         return NULL;
     }
 
+    // Set up address
+    struct sockaddr_in6 address;
+    memset(&address, 0, sizeof(address));
+    address.sin6_family = AF_INET6;
+    address.sin6_addr = in6addr_any;
+    address.sin6_port = htons(port);
+
+    // Binding
+    if (bind(server->socket, (struct sockaddr *)&address, sizeof(address)) == -1) {
+        close(server->socket);
+        free(server);
+        return NULL;
+    }
+
+    // Listen
+    if (listen(server->socket, SOMAXCONN) == -1) {
+        close(server->socket);
+        free(server);
+        return NULL;
+    }
+
     return server;
 }
 
