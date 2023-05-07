@@ -129,16 +129,34 @@ rpc_client *rpc_init_client(char *addr, int port) {
 }
 
 rpc_handle *rpc_find(rpc_client *cl, char *name) {
+    
+    // Create socket
+    int socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (socket_fd < 0) return NULL;
 
-    // Retrieve request from server
-    rpc_data request = {.data1 = strlen(name), .data2_len = 0, .data2 = name};
-    rpc_data *response = rpc_call(cl, NULL, &request);
-    if (response == NULL) return NULL;
+    // Server address
+    struct sockaddr_in6 address;
+    memset(&address, 0, sizeof(address));
+    address.sin6_family = AF_INET6;
+    inet_pton(AF_INET6, cl->ip, &(address.sin6_addr));
+    address.sin6_port = htons(cl->port);
 
-    // Error if function does not exist
-    int location = response->data1;
-    rpc_data_free(response);
-    if (index < 0) return NULL;
+    // Connect to server
+    if (connect(socket_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        close(socket_fd);
+        return NULL;
+    }
+
+    // Send module to server
+    size_t length = strlen(name);
+    send(socket_fd, &length, sizeof(length), 0);
+    send(socket_fd, name, length, 0);
+
+    // Receive module index
+    int location;
+    recv(socket_fd, &location, sizeof(location), 0);
+    close(socket_fd);
+    if (location == -1) return NULL;
 
     // Store index of function in handle, return handle
     rpc_handle *handle = (rpc_handle *)malloc(sizeof(rpc_handle));
