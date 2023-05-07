@@ -90,6 +90,26 @@ int find_location(rpc_server *srv, char *name) {
 
 void rpc_serve_all(rpc_server *srv) {
 
+    while (1) {
+
+        // Detect client message
+        int client = accept(srv->socket, NULL, NULL);
+        if (client < 0) continue;
+
+        // Ammend name of module in find request
+        size_t length;
+        recv(client, &length, sizeof(length), 0);
+        char *name = (char *)malloc(length + 1);
+        recv(client, name, length, 0);
+        name[length] = '\0';
+
+        // Send module existence to client
+        int location = find_location(srv, name);
+        send(client, &location, sizeof(location), 0);
+
+        free(name);
+        close(client);
+    }
 }
 
 struct rpc_client {
