@@ -89,7 +89,7 @@ struct rpc_client {
 };
 
 struct rpc_handle {
-    /* Add variable(s) for handle */
+    int location;
 };
 
 rpc_client *rpc_init_client(char *addr, int port) {
@@ -100,7 +100,21 @@ rpc_client *rpc_init_client(char *addr, int port) {
 }
 
 rpc_handle *rpc_find(rpc_client *cl, char *name) {
-    return NULL;
+
+    // Retrieve request from server
+    rpc_data request = {.data1 = strlen(name), .data2_len = 0, .data2 = name};
+    rpc_data *response = rpc_call(cl, NULL, &request);
+    if (response == NULL) return NULL;
+
+    // Error if function does not exist
+    int location = response->data1;
+    rpc_data_free(response);
+    if (index < 0) return NULL;
+
+    // Store index of function in handle, return handle
+    rpc_handle *handle = (rpc_handle *)malloc(sizeof(rpc_handle));
+    handle->location = location;
+    return handle;
 }
 
 rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
