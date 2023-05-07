@@ -12,13 +12,13 @@ rpc-server: server.o $(RPC_SYSTEM)
 	$(CC) -o $@ $^
 
 client.o: client.c rpc.h
-	$(CC) -c -o $@ $<
+	$(CC) -Wall  -c -o $@ $<
 
 server.o: server.c rpc.h
-	$(CC) -c -o $@ $<
+	$(CC) -Wall  -c -o $@ $<
 
 $(RPC_SYSTEM): rpc.c rpc.h
-	$(CC) -c -o $@ $<
+	$(CC) -Wall -c -o $@ $<
 
 format:
 	clang-format -style=file -i *.c *.h
