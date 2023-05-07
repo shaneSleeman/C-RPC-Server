@@ -12,12 +12,12 @@
 struct rpc_server {
     int port;
     int functions_count;
-    char **functions
+    char **functions;
     rpc_handler *handlers;
 };
 
 rpc_server *rpc_init_server(int port) {
-    rpc_server server = malloc(sizeof(rpc_server));
+    rpc_server *server = malloc(sizeof(rpc_server));
     server->port = port;
     server->functions_count = 0;
     server->functions = NULL;
