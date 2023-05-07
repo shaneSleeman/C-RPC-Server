@@ -4,18 +4,25 @@
 #include <stddef.h>
 #include <string.h>
 
+#define MAX_FUNCTIONS 1000 // Placeholder before dynamic
+
 /*  Note that due to being limited on time, I only aim to
     obtain 3 marks to pass the assignment hurdle. */
 
 struct rpc_server {
     int port;
-    size_t functions_count;
+    int functions_count;
     char **functions
     rpc_handler *handlers;
 };
 
 rpc_server *rpc_init_server(int port) {
-    return NULL;
+    rpc_server server = malloc(sizeof(rpc_server));
+    server->port = port;
+    server->functions_count = 0;
+    server->functions = NULL;
+    server->handlers = NULL;
+    return server;
 }
 
 int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
@@ -36,7 +43,10 @@ struct rpc_handle {
 };
 
 rpc_client *rpc_init_client(char *addr, int port) {
-    return NULL;
+    rpc_client *client = malloc(sizeof(rpc_client));
+    client->ip = strdup(addr);
+    client->port = port;
+    return client;
 }
 
 rpc_handle *rpc_find(rpc_client *cl, char *name) {
