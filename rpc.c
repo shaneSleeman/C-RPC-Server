@@ -79,6 +79,15 @@ int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
     return 0;
 }
 
+// Find if/where module exists on server
+int find_location(rpc_server *srv, char *name) {
+    for (int i = 0; i < srv->functions_count; i++) {
+        if (strcmp(srv->functions[i], name) == 0) return i;
+    }
+
+    return -1;
+}
+
 void rpc_serve_all(rpc_server *srv) {
 
 }
