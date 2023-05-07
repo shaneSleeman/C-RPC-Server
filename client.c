@@ -12,7 +12,6 @@ int main(int argc, char *argv[]) {
     char *port;
     int command;
     
-    // getopt appears to be needed for &
     while ((command = getopt(argc, argv, "i:p:")) != -1) {
         switch (command) {
             case 'i':
