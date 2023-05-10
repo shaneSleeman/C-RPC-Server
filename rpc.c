@@ -23,6 +23,13 @@ struct rpc_server {
     int socket;
 };
 
+/*  Extending data structure to include location, as cannot
+    modify rpc.h */
+typedef struct {
+    int location;
+    rpc_data data;
+} rpc_data_location;
+
 rpc_server *rpc_init_server(int port) {
     rpc_server *server = malloc(sizeof(rpc_server));
     server->port = port;
