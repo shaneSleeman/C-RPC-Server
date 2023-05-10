@@ -30,6 +30,11 @@ typedef struct {
     int location;
 } rpc_data_location;
 
+typedef enum {
+    FIND,
+    CALL
+} rpc_request_type;
+
 rpc_server *rpc_init_server(int port) {
     rpc_server *server = malloc(sizeof(rpc_server));
     server->port = port;
@@ -103,18 +108,28 @@ void rpc_serve_all(rpc_server *srv) {
         int client = accept(srv->socket, NULL, NULL);
         if (client < 0) continue;
 
-        // Ammend name of module in find request
-        size_t length;
-        recv(client, &length, sizeof(length), 0);
-        char *name = (char *)malloc(length + 1);
-        recv(client, name, length, 0);
-        name[length] = '\0';
+        // Detect request type
+        rpc_request_type request_type;
+        recv(client, &request_type, sizeof(request_type), 0);
 
-        // Send module existence to client
-        int location = find_location(srv, name);
-        send(client, &location, sizeof(location), 0);
+        if (request_type == FIND) {
 
-        free(name);
+            // Ammend name of module in find request
+            size_t length;
+            recv(client, &length, sizeof(length), 0);
+            char *name = (char *)malloc(length + 1);
+            recv(client, name, length, 0);
+            name[length] = '\0';
+
+            // Send module existence to client
+            int location = find_location(srv, name);
+            send(client, &location, sizeof(location), 0);
+
+            free(name);
+        } else if (request_type == CALL) {
+
+        }
+
         close(client);
     }
 }
@@ -154,6 +169,10 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
         close(socket_fd);
         return NULL;
     }
+
+    // Send request type to server
+    rpc_request_type request_type = FIND;
+    send(socket_fd, &request_type, sizeof(request_type), 0);
 
     // Send module to server
     size_t length = strlen(name);
@@ -195,6 +214,10 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
     rpc_data_location request;
     request.data = *payload;
     request.location = h->location;
+
+    // Send request type to server
+    rpc_request_type request_type = CALL;
+    send(socket_fd, &request_type, sizeof(request_type), 0);
 
     // Send rpc data to server
     send(socket_fd, &request, sizeof(request), 0);
