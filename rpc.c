@@ -47,7 +47,7 @@ rpc_server *rpc_init_server(int port) {
 
     // Reuse option, coincidentally similar to in spec
     int enable = 1;
-    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(reuse)) == -1) {
+    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1) {
         close(server->socket);
         free(server);
         perror("setsockopt");
