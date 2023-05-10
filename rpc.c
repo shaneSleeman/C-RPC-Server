@@ -131,14 +131,20 @@ void rpc_serve_all(rpc_server *srv) {
             // Receive handler location from client
             rpc_data_location request;
             recv(client, &request, sizeof(request), 0);
+
+            // Receive data format from client
+            recv(client, &request.data.data2_len, sizeof(request.data.data2_len), 0);
+            request.data.data2 = malloc(request.data.data2_len);
+            recv(client, request.data.data2, request.data.data2_len, 0);
             if (request.location < 0 || request.location >= srv->functions_count) {
                 close(client);
                 continue;
             }
 
-            // Call handler
+            // Call the handler
             rpc_handler handler = srv->handlers[request.location];
             rpc_data *response = handler(&(request.data));
+            free(request.data.data2);
 
             // Send confirmation to client
             if (response != NULL) {
@@ -238,8 +244,10 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
     rpc_request_type request_type = CALL;
     send(socket_fd, &request_type, sizeof(request_type), 0);
 
-    // Send rpc data to server
+    // Send correct data fields to server
     send(socket_fd, &request, sizeof(request), 0);
+    send(socket_fd, &payload->data2_len, sizeof(payload->data2_len), 0);
+    send(socket_fd, payload->data2, payload->data2_len, 0);
 
     // Get and return response
     rpc_data *response = (rpc_data *)malloc(sizeof(rpc_data));
