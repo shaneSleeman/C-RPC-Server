@@ -26,8 +26,8 @@ struct rpc_server {
 /*  Extending data structure to include location, as cannot
     modify rpc.h */
 typedef struct {
-    int location;
     rpc_data data;
+    int location;
 } rpc_data_location;
 
 rpc_server *rpc_init_server(int port) {
@@ -173,7 +173,37 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
 }
 
 rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
-    return NULL;
+
+    // Create socket
+    int socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (socket_fd < 0) return NULL;
+
+    // Server address
+    struct sockaddr_in6 address;
+    memset(&address, 0, sizeof(address));
+    address.sin6_family = AF_INET6;
+    inet_pton(AF_INET6, cl->ip, &(address.sin6_addr));
+    address.sin6_port = htons(cl->port);
+
+    // Connect to server
+    if (connect(socket_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        close(socket_fd);
+        return NULL;
+    }
+
+    // Set up rpc data struct
+    rpc_data_location request;
+    request.data = *payload;
+    request.location = h->location;
+
+    // Send rpc data to server
+    send(socket_fd, &request, sizeof(request), 0);
+
+    // Get and return response
+    rpc_data *response = (rpc_data *)malloc(sizeof(rpc_data));
+    recv(socket_fd, response, sizeof(*response), 0);
+    close(socket_fd);
+    return response;
 }
 
 void rpc_close_client(rpc_client *cl) {
