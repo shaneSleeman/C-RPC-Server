@@ -128,6 +128,25 @@ void rpc_serve_all(rpc_server *srv) {
             free(name);
         } else if (request_type == CALL) {
 
+            // Receive handler location from client
+            rpc_data_location request;
+            recv(client, &request, sizeof(request), 0);
+            if (request.location < 0 || request.location >= srv->functions_count) {
+                close(client);
+                continue;
+            }
+
+            // Call handler
+            rpc_handler handler = srv->handlers[request.location];
+            rpc_data *response = handler(&(request.data));
+
+            // Send confirmation to client
+            if (response != NULL) {
+                send(client, response, sizeof(*response), 0);
+                rpc_data_free(response);
+            } else {
+
+            }
         }
 
         close(client);
