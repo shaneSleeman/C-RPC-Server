@@ -45,12 +45,13 @@ rpc_server *rpc_init_server(int port) {
     // Set up socket
     server->socket = socket(AF_INET6, SOCK_STREAM, 0);
 
-    // Reuse option
-    int reuse = 1;
-    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+    // Reuse option, coincidentally similar to in spec
+    int enable = 1;
+    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(reuse)) == -1) {
         close(server->socket);
         free(server);
-        return NULL;
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
     }
 
     // Set up address
