@@ -49,6 +49,8 @@ rpc_server *rpc_init_server(int port) {
     int enable = 1;
     if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
         close(server->socket);
+        free(server->functions);
+        free(server->handlers);
         free(server);
         return NULL;
     }
@@ -63,6 +65,8 @@ rpc_server *rpc_init_server(int port) {
     // Binding
     if (bind(server->socket, (struct sockaddr *)&address, sizeof(address)) == -1) {
         close(server->socket);
+        free(server->functions);
+        free(server->handlers);
         free(server);
         return NULL;
     }
@@ -70,6 +74,8 @@ rpc_server *rpc_init_server(int port) {
     // Listen
     if (listen(server->socket, SOMAXCONN) == -1) {
         close(server->socket);
+        free(server->functions);
+        free(server->handlers);
         free(server);
         return NULL;
     }
@@ -87,6 +93,13 @@ int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
     srv->functions[srv->functions_count] = strdup(name);
     srv->handlers[srv->functions_count] = handler;
     srv->functions_count++;
+
+    if (srv->functions_count >= MAX_FUNCTIONS) {
+        free(srv->functions[srv->functions_count - 1]);
+        srv->functions_count--;
+        return -1;
+    }
+
 
     return 0;
 }
@@ -180,7 +193,10 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     
     // Create socket
     int socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
-    if (socket_fd < 0) return NULL;
+    if (socket_fd < 0) {
+        close(socket_fd);
+        return NULL;
+    }
 
     // Server address
     struct sockaddr_in6 address;
@@ -208,7 +224,10 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     int location;
     recv(socket_fd, &location, sizeof(location), 0);
     close(socket_fd);
-    if (location == -1) return NULL;
+    if (location == -1) {
+        close(socket_fd);
+        return NULL;
+    }
 
     // Store index of function in handle, return handle
     rpc_handle *handle = (rpc_handle *)malloc(sizeof(rpc_handle));
@@ -220,7 +239,10 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 
     // Create socket
     int socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
-    if (socket_fd < 0) return NULL;
+    if (socket_fd < 0) {
+        close(socket_fd);
+        return NULL;
+    }
 
     // Server address
     struct sockaddr_in6 address;
@@ -257,7 +279,9 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 }
 
 void rpc_close_client(rpc_client *cl) {
-
+    if (cl == NULL) return;
+    free(cl->ip);
+    free(cl);
 }
 
 void rpc_data_free(rpc_data *data) {
