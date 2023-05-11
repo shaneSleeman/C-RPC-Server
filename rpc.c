@@ -1,19 +1,17 @@
 #include "rpc.h"
 #include <stdlib.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include <string.h>
 #include <unistd.h>
 
 // Socket functions
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
 
 #define MAX_FUNCTIONS 1000 // Placeholder before dynamic
 
 /*  Note that due to being limited on time, I only aim to
-    obtain 3 marks to pass the assignment hurdle. */
+    obtain 3 marks in the CI to pass the assignment hurdle. 
+*/
 
 struct rpc_server {
     int port;
@@ -105,7 +103,7 @@ int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
 }
 
 // Find if/where module exists on server
-int find_location(rpc_server *srv, char *name) {
+int rpc_find_location(rpc_server *srv, char *name) {
     for (int i = 0; i < srv->functions_count; i++) {
         if (strcmp(srv->functions[i], name) == 0) return i;
     }
@@ -135,7 +133,7 @@ void rpc_serve_all(rpc_server *srv) {
             name[length] = '\0';
 
             // Send module existence to client
-            int location = find_location(srv, name);
+            int location = rpc_find_location(srv, name);
             send(client, &location, sizeof(location), 0);
 
             free(name);
@@ -163,8 +161,6 @@ void rpc_serve_all(rpc_server *srv) {
             if (response != NULL) {
                 send(client, response, sizeof(*response), 0);
                 rpc_data_free(response);
-            } else {
-
             }
         }
 
@@ -172,7 +168,6 @@ void rpc_serve_all(rpc_server *srv) {
     }
 }
 
-// Random comment to allow push
 struct rpc_client {
     char *ip;
     int port;
@@ -225,7 +220,6 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     recv(socket_fd, &location, sizeof(location), 0);
     close(socket_fd);
     if (location == -1) {
-        close(socket_fd);
         return NULL;
     }
 
