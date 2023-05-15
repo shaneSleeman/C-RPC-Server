@@ -173,7 +173,6 @@ rpc_serve_all (rpc_server * srv)
 	  // Receive handler location from client
 	  rpc_data_location request;
 	  recv (client, &request, sizeof (request), 0);
-      request.location = ntohl(request.location);
 
 	  // Receive data format from client
 	  recv (client, &request.data.data2_len,
@@ -262,7 +261,6 @@ rpc_find (rpc_client * cl, char *name)
   // Receive module index
   int location;
   recv (socket_fd, &location, sizeof (location), 0);
-  location = ntohl(location);
   close (socket_fd);
   if (location == -1)
     {
@@ -304,7 +302,7 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   // Set up rpc data struct
   rpc_data_location request;
   request.data = *payload;
-  request.location = htonl(h->location);
+  request.location = h->location;
 
   // Send request type to server
   rpc_request_type request_type = CALL;
