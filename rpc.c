@@ -162,7 +162,6 @@ rpc_serve_all (rpc_server * srv)
 
 	  // Send module existence to client
 	  int location = rpc_find_location (srv, name);
-      location = htonl(location);
 	  send (client, &location, sizeof (location), 0);
 
 	  free (name);
@@ -219,6 +218,10 @@ rpc_init_client (char *addr, int port)
 {
   rpc_client *client = malloc (sizeof (rpc_client));
   client->ip = strdup (addr);
+  if(client->ip == NULL) {
+    free(client);
+    return NULL;
+  }
   client->port = port;
   return client;
 }
@@ -316,7 +319,6 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   // Get and return response
   rpc_data *response = (rpc_data *) malloc (sizeof (rpc_data));
   recv (socket_fd, response, sizeof (*response), 0);
-  response->data1 = ntohl(response->data1);
   close (socket_fd);
   return response;
 }
