@@ -7,8 +7,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#define MAX_FUNCTIONS 1000	// Placeholder before dynamic
-
 /*  Note that due to being limited on time, I only aim to
     obtain 4 (3.5 from CI, >= 0.5 from answers and quality)
     to pass the assignment hurdle. 
@@ -60,7 +58,8 @@ rpc_init_server (int port)
       free (server->functions);
       free (server->handlers);
       free (server);
-      return NULL;
+      exit(EXIT_FAILURE);
+      //return NULL;
     }
 
   // Set up address
@@ -111,14 +110,6 @@ rpc_register (rpc_server * srv, char *name, rpc_handler handler)
   srv->functions[srv->functions_count] = strdup (name);
   srv->handlers[srv->functions_count] = handler;
   srv->functions_count++;
-
-    /*
-  if (srv->functions_count >= MAX_FUNCTIONS)
-    {
-      free (srv->functions[srv->functions_count - 1]);
-      srv->functions_count--;
-      return -1;
-    }*/
 
   return 0;
 }
