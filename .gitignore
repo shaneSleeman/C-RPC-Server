@@ -1,6 +1,6 @@
 *
 !.gitignore
-!*.c
+!rpc.c
 !*.h
 !Makefile
 !.gitlab-ci.yml
