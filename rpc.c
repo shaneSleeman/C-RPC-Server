@@ -162,6 +162,7 @@ rpc_serve_all (rpc_server * srv)
 
 	  // Send module existence to client
 	  int location = rpc_find_location (srv, name);
+      location = htonl(location);
 	  send (client, &location, sizeof (location), 0);
 
 	  free (name);
@@ -172,6 +173,7 @@ rpc_serve_all (rpc_server * srv)
 	  // Receive handler location from client
 	  rpc_data_location request;
 	  recv (client, &request, sizeof (request), 0);
+      request.location = ntohl(request.location);
 
 	  // Receive data format from client
 	  recv (client, &request.data.data2_len,
@@ -260,6 +262,7 @@ rpc_find (rpc_client * cl, char *name)
   // Receive module index
   int location;
   recv (socket_fd, &location, sizeof (location), 0);
+  location = ntohl(location);
   close (socket_fd);
   if (location == -1)
     {
@@ -301,7 +304,7 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   // Set up rpc data struct
   rpc_data_location request;
   request.data = *payload;
-  request.location = h->location;
+  request.location = htonl(h->location);
 
   // Send request type to server
   rpc_request_type request_type = CALL;
@@ -315,6 +318,7 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   // Get and return response
   rpc_data *response = (rpc_data *) malloc (sizeof (rpc_data));
   recv (socket_fd, response, sizeof (*response), 0);
+  response->data1 = ntohl(response->data1);
   close (socket_fd);
   return response;
 }
