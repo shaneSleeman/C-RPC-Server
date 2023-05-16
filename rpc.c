@@ -8,8 +8,8 @@
 #include <arpa/inet.h>
 
 /*  Note that due to being limited on time, I only aim to
-    obtain 4 (3.5 from CI, >= 0.5 from answers and quality)
-    to pass the assignment hurdle. 
+    obtain at least 3 marks (>=3.5 from CI, >= 0.5 from
+    answers and quality) to pass the hurdle. 
 */
 
 struct rpc_server
