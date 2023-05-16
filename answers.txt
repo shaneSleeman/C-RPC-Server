@@ -2,7 +2,7 @@ Shane Sleeman
 sleemans
 1082313
 
-1. With the implementation, the server can accept calls from everyone - this is because the program (excluding latter tasks that I haven't implemented) are simulations for demonstration purposes, and hence restriction isn't implemented. While the server accepts everyone, an ideal server would restrict accesses for security
+1. With the implementation, the server can accept calls from everyone - this is because the program (excluding latter tasks that I haven't implemented) are simulations for demonstration purposes, and hence restriction isn't needed. While the server accepts everyone, an ideal server would restrict accesses for security
 
 2. If authentication were to be implemented, it should be done in the RPC framework, as it's much easier to implement and consistent (i.e. in 1 place rather than multiple, which may even be unnecessarily duplicated)
 
@@ -33,6 +33,4 @@ My data block is fixed-size, for simplicity.
 
 The server returns -1 for nonexistent functions, and when the data length is too large.
 
-When a message exceeds the max IP packet size, TCP/IP will fragment and reassemble this on the recieivng end. 
-
-As said earlier, TCP was chosen, which ensures orderliness using retransmission.
+When a message exceeds the max IP packet size, TCP/IP will fragment and reassemble this. 
