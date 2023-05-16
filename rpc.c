@@ -58,8 +58,8 @@ rpc_init_server (int port)
       free (server->functions);
       free (server->handlers);
       free (server);
-      exit(EXIT_FAILURE);
-      //return NULL;
+      //exit(EXIT_FAILURE);
+      return NULL;
     }
 
   // Set up address
