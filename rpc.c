@@ -155,7 +155,7 @@ rpc_serve_all (rpc_server * srv)
         close(client);
         continue;
       };
-	  char *name = (char *) malloc (length + 1);
+	  char *name = malloc (length + 1);
 	  if(recv (client, name, length, 0) == -1) {
         close(client);
         continue;
@@ -300,7 +300,7 @@ rpc_find (rpc_client * cl, char *name)
     }
 
   // Store index of function in handle, return handle
-  rpc_handle *handle = (rpc_handle *) malloc (sizeof (rpc_handle));
+  rpc_handle *handle = malloc (sizeof (rpc_handle));
   handle->location = location;
   return handle;
 }
@@ -358,7 +358,7 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   };
 
   // Get and return response
-  rpc_data *response = (rpc_data *) malloc (sizeof (rpc_data));
+  rpc_data *response = malloc (sizeof (rpc_data));
   if(recv (socket_fd, response, sizeof (*response), 0) == -1) {
     close(socket_fd);
     return NULL;
