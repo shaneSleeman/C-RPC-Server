@@ -1,7 +1,8 @@
 *
 !.gitignore
-!rpc.c
 !*.h
 !Makefile
 !.gitlab-ci.yml
 !answers.txt
+*.c
+!rpc.c

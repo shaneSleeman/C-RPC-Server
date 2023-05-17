@@ -166,6 +166,7 @@ rpc_serve_all (rpc_server * srv)
 	  int location = rpc_find_location (srv, name);
 	  if(send (client, &location, sizeof (location), 0) == -1) {
         close(client);
+        free(name);
         continue;
       };
 
@@ -185,11 +186,13 @@ rpc_serve_all (rpc_server * srv)
 	  if(recv (client, &request.data.data2_len,
 		sizeof (request.data.data2_len), 0) == -1) {
             close(client);
+            free(request.data.data2);
             continue;
         };
 	  request.data.data2 = malloc (request.data.data2_len);
 	  if(recv (client, request.data.data2, request.data.data2_len, 0) == -1) {
         close(client);
+        free(request.data.data2);
         continue;
       };
 	  if (request.location < 0
@@ -361,6 +364,7 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   rpc_data *response = malloc (sizeof (rpc_data));
   if(recv (socket_fd, response, sizeof (*response), 0) == -1) {
     close(socket_fd);
+    free(response);
     return NULL;
   };
   close (socket_fd);
