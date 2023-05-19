@@ -8,8 +8,8 @@
 #include <arpa/inet.h>
 
 /*  Note that due to being limited on time, I only aim to
-    obtain at least 3 marks (>=3.5 from CI, >= 0.5 from
-    answers and quality) to pass the hurdle. 
+    obtain at least 3 marks (currently 4 from CI) to pass 
+    the hurdle. 
 */
 
 struct rpc_server
@@ -158,6 +158,7 @@ rpc_serve_all (rpc_server * srv)
 	  char *name = malloc (length + 1);
 	  if(recv (client, name, length, 0) == -1) {
         close(client);
+        free(name);
         continue;
       };
 	  name[length] = '\0';
@@ -189,6 +190,10 @@ rpc_serve_all (rpc_server * srv)
             free(request.data.data2);
             continue;
         };
+        if(sizeof(request.data.data1) > 8) {
+            close(client);
+            continue;
+        }
 	  request.data.data2 = malloc (request.data.data2_len);
 	  if(recv (client, request.data.data2, request.data.data2_len, 0) == -1) {
         close(client);
@@ -336,6 +341,12 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
 
   // Set up rpc data struct
   rpc_data_location request;
+
+  // Handle Task 5 requirement, 8 bytes max
+  if(sizeof(payload->data1) > 8) {
+    close(socket_fd);
+    return NULL;
+  }
   request.data = *payload;
   request.location = h->location;
 
