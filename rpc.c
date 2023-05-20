@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#define MAX_DATA1 8
+
 /*  Note that due to being limited on time, I only aim to
     obtain at least 3 marks (currently 4 from CI) to pass 
     the hurdle. 
@@ -52,7 +54,8 @@ rpc_init_server (int port)
   // Reuse option
   int enable = 1;
   if (setsockopt
-      (server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof (int)) == -1)
+      (server->socket, SOL_SOCKET, SO_REUSEADDR, &enable, 
+        sizeof (int)) == -1)
     {
       close (server->socket);
       free (server->functions);
@@ -70,8 +73,8 @@ rpc_init_server (int port)
   address.sin6_port = htons (port);
 
   // Binding
-  if (bind (server->socket, (struct sockaddr *) &address, sizeof (address)) ==
-      -1)
+  if (bind (server->socket, (struct sockaddr *) &address, 
+    sizeof (address)) == -1)
     {
       close (server->socket);
       free (server->functions);
@@ -94,7 +97,8 @@ rpc_init_server (int port)
 }
 
 int
-rpc_register (rpc_server * srv, char *name, rpc_handler handler)
+rpc_register (rpc_server * srv, char *name, rpc_handler 
+    handler)
 {
 
   // Dynamically resize arrays for new added function
@@ -141,35 +145,41 @@ rpc_serve_all (rpc_server * srv)
 
       // Detect request type
       rpc_request_type request_type;
-      if(recv (client, &request_type, sizeof (request_type), 0) == -1) {
-        close(client);
-        continue;
-      };
+      if (recv (client, &request_type, sizeof (request_type), 
+        0) == -1)
+	{
+	  close (client);
+	  continue;
+	};
 
       if (request_type == FIND)
 	{
 
 	  // Ammend name of module in find request
 	  size_t length;
-	  if(recv (client, &length, sizeof (length), 0) == -1) {
-        close(client);
-        continue;
-      };
+	  if (recv (client, &length, sizeof (length), 0) == -1)
+	    {
+	      close (client);
+	      continue;
+	    };
 	  char *name = malloc (length + 1);
-	  if(recv (client, name, length, 0) == -1) {
-        close(client);
-        free(name);
-        continue;
-      };
+	  if (recv (client, name, length, 0) == -1)
+	    {
+	      close (client);
+	      free (name);
+	      continue;
+	    };
 	  name[length] = '\0';
 
 	  // Send module existence to client
 	  int location = rpc_find_location (srv, name);
-	  if(send (client, &location, sizeof (location), 0) == -1) {
-        close(client);
-        free(name);
-        continue;
-      };
+	  if (send (client, &location, sizeof (location), 0) == 
+        -1)
+	    {
+	      close (client);
+	      free (name);
+	      continue;
+	    };
 
 	  free (name);
 	}
@@ -178,28 +188,33 @@ rpc_serve_all (rpc_server * srv)
 
 	  // Receive handler location from client
 	  rpc_data_location request;
-	  if(recv (client, &request, sizeof (request), 0) == -1) {
-        close(client);
-        continue;
-      };
+	  if (recv (client, &request, sizeof (request), 0) == -1)
+	    {
+	      close (client);
+	      continue;
+	    };
 
 	  // Receive data format from client
-	  if(recv (client, &request.data.data2_len,
-		sizeof (request.data.data2_len), 0) == -1) {
-            close(client);
-            free(request.data.data2);
-            continue;
-        };
-        if(sizeof(request.data.data1) > 8) {
-            close(client);
-            continue;
-        }
+	  if (recv (client, &request.data.data2_len,
+		    sizeof (request.data.data2_len), 0) == -1)
+	    {
+	      close (client);
+	      free (request.data.data2);
+	      continue;
+	    };
+	  if (sizeof (request.data.data1) > MAX_DATA1)
+	    {
+	      close (client);
+	      continue;
+	    }
 	  request.data.data2 = malloc (request.data.data2_len);
-	  if(recv (client, request.data.data2, request.data.data2_len, 0) == -1) {
-        close(client);
-        free(request.data.data2);
-        continue;
-      };
+	  if (recv (client, request.data.data2, 
+        request.data.data2_len, 0) == -1)
+	    {
+	      close (client);
+	      free (request.data.data2);
+	      continue;
+	    };
 	  if (request.location < 0
 	      || request.location >= srv->functions_count)
 	    {
@@ -215,10 +230,12 @@ rpc_serve_all (rpc_server * srv)
 	  // Send confirmation to client
 	  if (response != NULL)
 	    {
-	      if(send (client, response, sizeof (*response), 0) == -1) {
-            close(client);
-            continue;
-          };
+	      if (send (client, response, sizeof (*response), 0) 
+            == -1)
+		{
+		  close (client);
+		  continue;
+		};
 	      rpc_data_free (response);
 	    }
 	}
@@ -243,10 +260,11 @@ rpc_init_client (char *addr, int port)
 {
   rpc_client *client = malloc (sizeof (rpc_client));
   client->ip = strdup (addr);
-  if(client->ip == NULL) {
-    free(client);
-    return NULL;
-  }
+  if (client->ip == NULL)
+    {
+      free (client);
+      return NULL;
+    }
   client->port = port;
   return client;
 }
@@ -271,7 +289,8 @@ rpc_find (rpc_client * cl, char *name)
   address.sin6_port = htons (cl->port);
 
   // Connect to server
-  if (connect (socket_fd, (struct sockaddr *) &address, sizeof (address)) < 0)
+  if (connect (socket_fd, (struct sockaddr *) &address, 
+    sizeof (address)) < 0)
     {
       close (socket_fd);
       return NULL;
@@ -279,28 +298,34 @@ rpc_find (rpc_client * cl, char *name)
 
   // Send request type to server
   rpc_request_type request_type = FIND;
-  if(send (socket_fd, &request_type, sizeof (request_type), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
+  if (send (socket_fd, &request_type, sizeof (request_type), 
+    0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
 
   // Send module to server
   size_t length = strlen (name);
-  if(send (socket_fd, &length, sizeof (length), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
-  if(send (socket_fd, name, length, 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
+  if (send (socket_fd, &length, sizeof (length), 0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
+  if (send (socket_fd, name, length, 0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
 
   // Receive module index
   int location;
-  if(recv (socket_fd, &location, sizeof (location), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
+  if (recv (socket_fd, &location, sizeof (location), 0) == 
+    -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
   close (socket_fd);
   if (location == -1)
     {
@@ -314,7 +339,8 @@ rpc_find (rpc_client * cl, char *name)
 }
 
 rpc_data *
-rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
+rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * 
+    payload)
 {
 
   // Create socket
@@ -333,7 +359,8 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   address.sin6_port = htons (cl->port);
 
   // Connect to server
-  if (connect (socket_fd, (struct sockaddr *) &address, sizeof (address)) < 0)
+  if (connect (socket_fd, (struct sockaddr *) &address, 
+    sizeof (address)) < 0)
     {
       close (socket_fd);
       return NULL;
@@ -343,41 +370,51 @@ rpc_call (rpc_client * cl, rpc_handle * h, rpc_data * payload)
   rpc_data_location request;
 
   // Handle Task 5 requirement, 8 bytes max
-  if(sizeof(payload->data1) > 8) {
-    close(socket_fd);
-    return NULL;
-  }
+  if (sizeof (payload->data1) > MAX_DATA1)
+    {
+      close (socket_fd);
+      return NULL;
+    }
   request.data = *payload;
   request.location = h->location;
 
   // Send request type to server
   rpc_request_type request_type = CALL;
-  if(send (socket_fd, &request_type, sizeof (request_type), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
+  if (send (socket_fd, &request_type, sizeof (request_type),
+    0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
 
   // Send correct data fields to server
-  if(send (socket_fd, &request, sizeof (request), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
-  if(send (socket_fd, &payload->data2_len, sizeof (payload->data2_len), 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
-  if(send (socket_fd, payload->data2, payload->data2_len, 0) == -1) {
-    close(socket_fd);
-    return NULL;
-  };
+  if (send (socket_fd, &request, sizeof (request), 0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
+  if (send (socket_fd, &payload->data2_len, 
+    sizeof (payload->data2_len), 0) == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
+  if (send (socket_fd, payload->data2, payload->data2_len, 0) 
+    == -1)
+    {
+      close (socket_fd);
+      return NULL;
+    };
 
   // Get and return response
   rpc_data *response = malloc (sizeof (rpc_data));
-  if(recv (socket_fd, response, sizeof (*response), 0) == -1) {
-    close(socket_fd);
-    free(response);
-    return NULL;
-  };
+  if (recv (socket_fd, response, sizeof (*response), 0) == 
+    -1)
+    {
+      close (socket_fd);
+      free (response);
+      return NULL;
+    };
   close (socket_fd);
   return response;
 }
