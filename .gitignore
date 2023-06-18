@@ -6,3 +6,4 @@
 !answers.txt
 *.c
 !rpc.c
+!README.md
